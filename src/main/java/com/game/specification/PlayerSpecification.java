@@ -1,6 +1,8 @@
 package com.game.specification;
 
 import com.game.entity.Player;
+import com.game.entity.Profession;
+import com.game.entity.Race;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -13,6 +15,10 @@ public class PlayerSpecification implements Specification<Player> {
 
     private SearchCriteria searchCriteria;
 
+    public SearchCriteria getSearchCriteria() {
+        return searchCriteria;
+    }
+
     public PlayerSpecification(SearchCriteria searchCriteria) {
         this.searchCriteria = searchCriteria;
     }
@@ -23,34 +29,34 @@ public class PlayerSpecification implements Specification<Player> {
         String value = searchCriteria.getValue();
         switch (searchCriteria.getSearchOperation()) {
             case EQUALITY:
-                return criteriaBuilder.equal(root.get(key), castToRequiredType(root.get(key).getJavaType(), value));
+                switch (key) {
+                    case "banned":
+                        return criteriaBuilder.equal(root.get(key), Boolean.parseBoolean(value));
+                    case "profession":
+                        return criteriaBuilder.equal(root.get(key), Profession.valueOf(value));
+                    case "race":
+                        return criteriaBuilder.equal(root.get(key), Race.valueOf(value));
+                }
             case GREATER_THAN:
-                return criteriaBuilder.greaterThanOrEqualTo(root.get(key), (Integer) castToRequiredType(root.get(key).getJavaType(), value));
+                return criteriaBuilder.greaterThanOrEqualTo(root.get(key), Integer.parseInt(value));
             case LESS_THAN:
-                return criteriaBuilder.lessThanOrEqualTo(root.get(key), (Integer) castToRequiredType(root.get(key).getJavaType(), value));
+                return criteriaBuilder.lessThanOrEqualTo(root.get(key), Integer.parseInt(value));
             case GREATER_THAN_DATE:
-                return criteriaBuilder.greaterThanOrEqualTo(root.get(key), (Date) castToRequiredType(root.get(key).getJavaType(), value));
+                return criteriaBuilder.greaterThanOrEqualTo(root.get(key), new Date(Long.parseLong(value)));
             case LESS_THAN_DATE:
-                return criteriaBuilder.lessThanOrEqualTo(root.get(key), (Date) castToRequiredType(root.get(key).getJavaType(), value));
+                return criteriaBuilder.lessThanOrEqualTo(root.get(key), new Date(Long.parseLong(value)));
             case LIKE:
-                return criteriaBuilder.like(root.get(key), "%" + castToRequiredType(root.get(key).getJavaType(), value) + "%");
+                return criteriaBuilder.like(root.get(key), "%" + value + "%");
             default:
                 throw new RuntimeException();
         }
     }
 
-    private Object castToRequiredType(Class fieldType, String value) {
-        if (fieldType.isAssignableFrom(Integer.class)) {
-            return Integer.valueOf(value);
-        } else if (Enum.class.isAssignableFrom(fieldType)) {
-            return Enum.valueOf(fieldType, value);
-        } else if (fieldType.isAssignableFrom(String.class)) {
-            return String.valueOf(value);
-        } else if (fieldType.isAssignableFrom(Boolean.class)) {
-            return Boolean.valueOf(value);
-        } else if (fieldType.isAssignableFrom(Date.class)) {
-            return new Date(Long.parseLong(value));
-        }
-        return null;
+
+    @Override
+    public String toString() {
+        return "PlayerSpecification{" +
+                "searchCriteria=" + searchCriteria +
+                '}';
     }
 }

@@ -2,15 +2,14 @@ package com.game.controller;
 
 import com.game.entity.Player;
 import com.game.service.PlayerService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 //throw new ResponseStatusException(HttpStatus.NOT_FOUND, "IT IS WORKING???");
 
@@ -19,6 +18,7 @@ import java.util.Map;
 public class PlayersController {
     private final PlayerService playerService;
 
+    @Autowired
     public PlayersController(PlayerService playerService) {
         this.playerService = playerService;
     }
@@ -28,80 +28,100 @@ public class PlayersController {
         return new ResponseEntity<>(playerService.getAllWithFilters(allParams), HttpStatus.OK);
     }
 
-//    @GetMapping("/players/count")
-//    ResponseEntity<Integer> getPlayersCount(@RequestParam Map<String, String> allParams) {
-//        return playerService.getAllWithFiltersCount(allParams);
-//    }
-//
-//    @GetMapping("/players/{id}")
-//    ResponseEntity<Player> getPlayerById(@PathVariable String id) {
-//        long idLong = 0;
-//        Player player = null;
-//        if (checkId(id)) {
-//            idLong = Long.parseLong(id);
-//            player = playerService.getById(idLong);
-//        }
-//        if (player == null)
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player with provided ID not found.");
-//        return player;
-//    }
-//
-//    @PostMapping("/players")
-//    @ResponseBody
-//    ResponseEntity<Player> createPlayer(@RequestBody PlayerRequest playerRequest) {
-//        Player player = new Player();
-//        if (checkPlayerRequest(playerRequest, false)) {
-//            player.setName(playerRequest.getName());
-//            player.setTitle(playerRequest.getTitle());
-//            player.setRace(Race.valueOf(playerRequest.getRace()));
-//            player.setProfession(Profession.valueOf(playerRequest.getProfession()));
-//            player.setBirthday(new Date(Long.parseLong(playerRequest.getBirthday())));
-//            player.setBanned(playerRequest.getBanned() != null && Boolean.parseBoolean(playerRequest.getBanned()));
-//            player.setExperience(Integer.parseInt(playerRequest.getExperience()));
-//            player.setLevel(calculateLevel(player.getExperience()));
-//            player.setUntilNextLevel(calculateExperienceTillNextLevel(player.getLevel(), player.getExperience()));
-//        }
-//        playerService.save(player);
-//        return player;
-//    }
-//
-//    @PostMapping("/players/{id}")
-//    ResponseEntity<?> updatePlayer(@RequestBody PlayerRequest playerRequest, @PathVariable String id) {
-//        checkPlayerRequest(playerRequest, true);
-//        Player player = getPlayerById(id);
-//        if (playerRequest.getName() != null) player.setName(playerRequest.getName());
-//        if (playerRequest.getTitle() != null) player.setTitle(playerRequest.getTitle());
-//        if (playerRequest.getRace() != null) player.setRace(Race.valueOf(playerRequest.getRace()));
-//        if (playerRequest.getProfession() != null) player.setProfession(Profession.valueOf(playerRequest.getProfession()));
-//        if (playerRequest.getBirthday() != null) player.setBirthday(new Date(Long.parseLong(playerRequest.getBirthday())));
-//        if (playerRequest.getBanned() != null) player.setBanned(Boolean.parseBoolean(playerRequest.getBanned()));
-//        if (playerRequest.getExperience() != null) {
-//            player.setExperience(Integer.parseInt(playerRequest.getExperience()));
-//            player.setLevel(calculateLevel(player.getExperience()));
-//            player.setUntilNextLevel(calculateExperienceTillNextLevel(player.getLevel(), player.getExperience()));
-//        }
-//        playerService.update(player);
-//        return player;
-//    }
-//
-//
-//    @DeleteMapping("/players/{id}")
-//    ResponseEntity<?> deletePlayer(@PathVariable String id) {
-//        checkId(id);
-//        playerService.delete(getPlayerById(id));
-//    }
-//
-//    private boolean checkId(String id) {
-//        try {
-//            long idLong = Long.parseLong(id);
-//            if (!(idLong > 0)) {
-//                throw new NumberFormatException();
-//            }
-//        } catch (NumberFormatException e) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect ID field.");
-//        }
-//        return true;
-//    }
+    @GetMapping("/players/count")
+    ResponseEntity<Integer> getPlayersCount(@RequestParam Map<String, String> allParams) {
+        return new ResponseEntity<>(playerService.getAllWithFiltersCount(allParams), HttpStatus.OK);
+    }
+
+    @GetMapping("/players/{id}")
+    ResponseEntity<Player> getPlayerById(@PathVariable String id) {
+        long idLong = 0;
+        Optional<Player> player;
+        if (!checkId(id)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } else {
+            idLong = Long.parseLong(id);
+            player = playerService.getPlayerById(idLong);
+        }
+        if (!player.isPresent())
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(player.get(), HttpStatus.OK);
+    }
+
+    @PostMapping("/players")
+    @ResponseBody
+    ResponseEntity<Player> createPlayer(@RequestBody Player player) {
+        if (checkPlayer(player, false)) {
+            playerService.save(player);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(player, HttpStatus.OK);
+    }
+
+    @PostMapping("/players/{id}")
+    ResponseEntity<?> updatePlayer(@RequestBody Player updatablePlayer, @PathVariable String id) {
+        if (!checkPlayer(updatablePlayer, true)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        Player player;
+        if (getPlayerById(id).getStatusCode().equals(HttpStatus.OK)) {
+            player = getPlayerById(id).getBody();
+        } else {
+            return new ResponseEntity<>(getPlayerById(id).getStatusCode());
+        }
+        player = playerService.update(updatablePlayer, player);
+        return new ResponseEntity<>(player, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/players/{id}")
+    ResponseEntity<?> deletePlayer(@PathVariable String id) {
+        if (checkId(id)) {
+            ResponseEntity<Player> responseEntity = getPlayerById(id);
+            if (responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                playerService.delete(responseEntity.getBody());
+            }
+            return new ResponseEntity<>(responseEntity.getStatusCode());
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    private boolean checkPlayer(Player player, boolean isUpdating) {
+        if (!isUpdating) {
+            if (player.getName() == null
+                    || player.getTitle() == null
+                    || player.getRace() == null
+                    || player.getProfession() == null
+                    || player.getBirthday() == null
+                    || player.getExperience() == null) {
+                return false;
+            }
+        }
+        if ((player.getName() != null) && player.getName().length() > 12
+                || (player.getName() != null) && player.getName().trim().length() == 0
+                || (player.getTitle() != null) && player.getTitle().length() > 30
+                || (player.getExperience() != null) && (player.getExperience() < 0 || player.getExperience() > 10000000)
+                || (player.getBirthday() != null) && player.getBirthday().getTime() < 946674000000L
+                || (player.getBirthday() != null) && player.getBirthday().getTime() > 32535205199999L) {
+            return false;
+        }
+        if (player.isBanned() == null) {
+            player.setBanned(false);
+        }
+        return true;
+    }
+
+    private boolean checkId(String id) {
+        try {
+            long idLong = Long.parseLong(id);
+            if (!(idLong > 0)) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
 //
 //    private boolean checkPlayerRequest(PlayerRequest playerRequest, boolean isUpdating) {
 //        // May be problems with "null" experience
@@ -129,11 +149,5 @@ public class PlayersController {
 //        return true;
 //    }
 //
-//    private int calculateLevel(int experience) {
-//        return (int) ((Math.sqrt(2500 + 200.0 * experience) - 50) / 100);
-//    }
-//
-//    private int calculateExperienceTillNextLevel(int currentLvl, int experience) {
-//        return 50 * (currentLvl + 1) * (currentLvl + 2) - experience;
-//    }
+
 }

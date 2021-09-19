@@ -5,6 +5,8 @@ public class SearchCriteria {
     private String key, value, name;
     private SearchOperation searchOperation;
 
+
+
     public SearchCriteria(String name, String value) {
         this.name = name;
         this.value = value;
@@ -80,5 +82,14 @@ public class SearchCriteria {
 
     public void setName(String name) {
         this.name = name;
+    }
+    @Override
+    public String toString() {
+        return "SearchCriteria{" +
+                "key='" + key + '\'' +
+                ", value='" + value + '\'' +
+                ", name='" + name + '\'' +
+                ", searchOperation=" + searchOperation +
+                '}';
     }
 }

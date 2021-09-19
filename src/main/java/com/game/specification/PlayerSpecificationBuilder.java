@@ -21,13 +21,21 @@ public class PlayerSpecificationBuilder {
         Specification<Player> specification = null;
         if (list.size() > 0) {
             specification = list.remove(0);
+
         }
         if (list.size() > 0) {
             for (Specification<Player> currentSpec: list
                  ) {
-                specification.and(currentSpec);
+                specification = specification.and(currentSpec);
             }
         }
         return specification;
+    }
+
+    @Override
+    public String toString() {
+        return "PlayerSpecificationBuilder{" +
+                "list=" + list +
+                '}';
     }
 }
