@@ -2,10 +2,12 @@ package com.game.specification;
 
 import com.game.entity.Player;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class PlayerSpecificationBuilder {
     private final List<Specification<Player>> list = new ArrayList<>();
 
@@ -30,6 +32,10 @@ public class PlayerSpecificationBuilder {
             }
         }
         return specification;
+    }
+
+    public void clean() {
+        this.list.clear();
     }
 
     @Override

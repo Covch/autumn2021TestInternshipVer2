@@ -2,8 +2,6 @@ package com.game.service;
 
 import com.game.controller.PlayerOrder;
 import com.game.entity.Player;
-import com.game.entity.Profession;
-import com.game.entity.Race;
 import com.game.repository.PlayerRepository;
 import com.game.specification.PlayerSpecification;
 import com.game.specification.PlayerSpecificationBuilder;
@@ -13,8 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,24 +18,12 @@ import java.util.Optional;
 @Service
 public class PlayerService {
     private final PlayerRepository playerRepository;
+    private final PlayerSpecificationBuilder playerSpecificationBuilder;
 
-    public PlayerService(PlayerRepository playerRepository) {
+    public PlayerService(PlayerRepository playerRepository, PlayerSpecificationBuilder playerSpecificationBuilder) {
         this.playerRepository = playerRepository;
+        this.playerSpecificationBuilder = playerSpecificationBuilder;
     }
-
-//    public ResponseEntity<List<Player>> getAll (List<SearchCriteria> filters, Pageable pageable) {
-//        Page<Player> pagePlayers;
-//        pagePlayers = playerSpecification.getQueryResult(filters, pageable);
-//
-//        List<Player> players;
-//        players = pagePlayers.getContent();
-//
-//        return new ResponseEntity<>(players, HttpStatus.OK);
-//    }
-
-//    public ResponseEntity<Integer> getPlayersCount(List<SearchCriteria> filters, Pageable pageable) {
-//
-//    }
 
     public List<Player> getAllWithFilters(Map<String, String> allParams) {
         Pageable pageable = getPageable(allParams);
@@ -50,7 +34,6 @@ public class PlayerService {
             list = playerRepository.findAll(pageable).getContent();
         }
         return list;
-
     }
 
     public Integer getAllWithFiltersCount(Map<String, String> allParams) {
@@ -108,25 +91,25 @@ public class PlayerService {
         } else  {
             pageSize = 3;
         }
-        if (allParams.containsKey("playOrder")) {
-            playerOrder = PlayerOrder.valueOf(allParams.get("playOrder"));
+        if (allParams.containsKey("order")) {
+            playerOrder = PlayerOrder.valueOf(allParams.get("order"));
         } else {
             playerOrder = PlayerOrder.ID;
         }
         Sort sort = Sort.by(playerOrder.getFieldName());
-        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort);
-        return pageRequest;
+        return PageRequest.of(pageNumber, pageSize, sort);
     }
 
     private Specification<Player> getSpecification(Map<String, String> allParams) {
-        PlayerSpecificationBuilder playerSpecificationBuilder = new PlayerSpecificationBuilder();
         for (Map.Entry<String, String> entry: allParams.entrySet()
              ) {
-            if (entry.getValue() != null && !entry.getKey().equals("pageNumber") && !entry.getKey().equals("pageSize") && !entry.getKey().equals("playOrder")) {
+            if (entry.getValue() != null && !entry.getKey().equals("pageNumber") && !entry.getKey().equals("pageSize") && !entry.getKey().equals("order")) {
                 playerSpecificationBuilder.with(new PlayerSpecification(new SearchCriteria(entry.getKey(), entry.getValue())));
             }
         }
-        return playerSpecificationBuilder.build();
+        Specification<Player> specification = playerSpecificationBuilder.build();
+        playerSpecificationBuilder.clean();
+        return specification;
     }
 
     private int calculateLevel(int experience) {

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-//throw new ResponseStatusException(HttpStatus.NOT_FOUND, "IT IS WORKING???");
 
 @RestController
 @RequestMapping("/rest")
@@ -122,32 +121,5 @@ public class PlayersController {
         }
         return true;
     }
-//
-//    private boolean checkPlayerRequest(PlayerRequest playerRequest, boolean isUpdating) {
-//        // May be problems with "null" experience
-//        if (!isUpdating) {
-//            if (playerRequest.getName() == null || playerRequest.getTitle() == null || playerRequest.getRace() == null ||
-//                    playerRequest.getProfession() == null || playerRequest.getBirthday() == null || playerRequest.getExperience() == null) {
-//                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL Data is incomplete.");
-//            }
-//        }
-//        if (playerRequest.getName() != null && playerRequest.getTitle() != null && (playerRequest.getName().length() > 12 || playerRequest.getTitle().length() > 30)) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'name' or (and) 'title' is (are) too long.");
-//        }
-//        if (playerRequest.getName() != null && playerRequest.getName().isEmpty()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'name' is empty.");
-//        }
-//        if (playerRequest.getExperience() != null && (Integer.parseInt(playerRequest.getExperience()) < 0 || Integer.parseInt(playerRequest.getExperience()) > 10_000_000)) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "'experience' is out of bounds.");
-//        }
-//        if (playerRequest.getBirthday() != null && (Long.parseLong(playerRequest.getBirthday()) < 0)) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect registration date.");
-//        }
-//        if (playerRequest.getBirthday() != null && (Long.parseLong(playerRequest.getBirthday()) < 946674000000L || Long.parseLong(playerRequest.getBirthday()) > 32535205199999L)) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect registration date.");
-//        }
-//        return true;
-//    }
-//
 
 }
